@@ -1,6 +1,8 @@
 import bpy
 import bmesh
 
+from .helpers import Pitch
+
 class GenerateVAT(bpy.types.Operator):
     """Tooltip"""
     bl_idname = "object.generate_vat"
@@ -44,29 +46,38 @@ class GenerateVAT(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class GenerateVATMap(bpy.types.Operator):
+class GenerateUVMap(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "object.generate_vat_map"
-    bl_label = "generate vat map"
+    bl_idname = "object.generate_animation_uv_map"
+    bl_label = "generate animation UV map"
+
+    target_mesh: bpy.props.StringProperty(name="Target Mesh")
+    uv_map_name: bpy.props.StringProperty(name="UV Map Name", default="AniMap")
+    max_texture_dimension: bpy.props.IntProperty(name="Max texture dimension", default=4096)
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None
+        return context.mode == 'OBJECT'
 
     def execute(self, context):
-        m = context.active_object.data
+        m = bpy.data.meshes.get(self.target_mesh)
+        if not m:
+            return {'CANCELLED'}
+
         bm = bmesh.new()
         bm.from_mesh(m)
 
-        uv_layer = bm.loops.layers.uv.new("VATMap")
+        uv_layer = bm.loops.layers.uv.get(self.uv_map_name)
+        if not uv_layer:
+            uv_layer = bm.loops.layers.uv.new(self.uv_map_name)
+
         count = len(bm.verts)
+        pitch = Pitch(self.max_texture_dimension, count)
         i = 0
 
         for v in bm.verts:
             for l in v.link_loops:
-                uv = l[uv_layer].uv
-                uv[1] = 0.0
-                uv[0] = i/count + (0.5/count)
+                l[uv_layer].uv = pitch.pos_from_index(i)
             i += 1
 
         bm.to_mesh(m)
@@ -74,10 +85,10 @@ class GenerateVATMap(bpy.types.Operator):
         return {'FINISHED'}
 
 def ops_register():
-    bpy.utils.register_class(GenerateVATMap)
+    bpy.utils.register_class(GenerateUVMap)
     bpy.utils.register_class(GenerateVAT)
 
 
 def ops_unregister():
-    bpy.utils.unregister_class(GenerateVATMap)
+    bpy.utils.unregister_class(GenerateUVMap)
     bpy.utils.unregister_class(GenerateVAT)
