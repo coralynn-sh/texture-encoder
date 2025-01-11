@@ -59,7 +59,6 @@ class GenerateAnimationTexture(bpy.types.Operator):
         f_count =  dat["vts_end_frame"] - dat["vts_start_frame"]
 
         if not o or f_count < 1:
-            print(f_count)
             return {'CANCELLED'}
 
         bm = bmesh.new()
@@ -70,7 +69,6 @@ class GenerateAnimationTexture(bpy.types.Operator):
         bm.free()
 
         for vts in range(dat["vts_count"]):
-            print(vts)
             offsets = list()
             red_prop = Prop(dat[f"vts_red_name_{vts}"], dat[f"vts_red_min_{vts}"], dat[f"vts_red_max_{vts}"])
             green_prop = Prop(dat[f"vts_green_name_{vts}"], dat[f"vts_green_min_{vts}"], dat[f"vts_green_max_{vts}"])
