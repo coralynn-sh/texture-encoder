@@ -1,6 +1,6 @@
 schema_version = "1.0.0"
 id = "cyn_texture_encoder"
-version = "0.1.0"
+version = "0.1.1"
 name = "Texture Encoder"
 tagline = "Encode arbitrary vertex data to a texture"
 maintainer = "Coralynn Colombe <coralynn@cyn.sh>"

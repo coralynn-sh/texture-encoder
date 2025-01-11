@@ -13,6 +13,14 @@ class Tex(bpy.types.PropertyGroup):
     green: bpy.props.CollectionProperty(type=ChannelParams)
     blue: bpy.props.CollectionProperty(type=ChannelParams)
 
+def inv_lerp(v, min, max):
+    return (v - min) / (max - min)
+
+def clamp(v, min, max):
+    ret = v if v > min else min
+    ret = v if v < max else max
+    return ret
+
 class Prop():
     def __init__(self, name, min, max):
         self.min = min
@@ -58,29 +66,29 @@ class Prop():
             case "position":
                 match self.value:
                     case 'x':
-                        return vert.co[0]
+                        return clamp(inv_lerp(vert.co[0], self.min, self.max), 0, 1)
                     case 'y':
-                        return vert.co[1]
+                        return clamp(inv_lerp(vert.co[1], self.min, self.max), 0, 1)
                     case 'z':
-                        return vert.co[2]
+                        return clamp(inv_lerp(vert.co[2], self.min, self.max), 0, 1)
             case "normal":
                 match self.value:
                     case 'x':
-                        return vert.normal[0]
+                        return clamp(inv_lerp(vert.normal[0], self.min, self.max), 0, 1)
                     case 'y':
-                        return vert.normal[1]
+                        return clamp(inv_lerp(vert.normal[1], self.min, self.max), 0, 1)
                     case 'z':
-                        return vert.normal[2]
+                        return clamp(inv_lerp(vert.normal[2], self.min, self.max), 0, 1)
             case "scalar":
-                return vert[self.layer]
+                return clamp(inv_lerp(vert[self.layer], self.min, self.max), 0, 1)
             case "vector":
                 match self.s:
                     case 'x':
-                        return vert[self.layer][0]
+                        return clamp(inv_lerp(vert[self.layer][0], self.min, self.max), 0, 1)
                     case 'y':
-                        return vert[self.layer][1]
+                        return clamp(inv_lerp(vert[self.layer][1], self.min, self.max), 0, 1)
                     case 'z':
-                        return vert[self.layer][2]
+                        return clamp(inv_lerp(vert[self.layer][2], self.min, self.max), 0, 1)
 
 
 class Pitch():
