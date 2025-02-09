@@ -105,6 +105,13 @@ class Pitch():
             self.x = 1 / item_count
             self.y = 1
 
+    def get_dims(self, frame_count):
+        return [self.width, self.y_count * frame_count]
+
+    def get_flat_pixel_array_size(self, frame_count):
+        dims = self.get_dims(frame_count)
+        return dims[0] * dims[1]
+
     def max_frame_count(self):
         return math.floor(self.max / self.y_count)
 

@@ -69,35 +69,42 @@ class GenerateAnimationTexture(bpy.types.Operator):
         bm.free()
 
         for vts in range(dat["vts_count"]):
-            offsets = list()
+            offsets = [1] * pitch.get_flat_pixel_array_size(f_count) * 4
             red_prop = Prop(dat[f"vts_red_name_{vts}"], dat[f"vts_red_min_{vts}"], dat[f"vts_red_max_{vts}"])
             green_prop = Prop(dat[f"vts_green_name_{vts}"], dat[f"vts_green_min_{vts}"], dat[f"vts_green_max_{vts}"])
             blue_prop = Prop(dat[f"vts_blue_name_{vts}"], dat[f"vts_blue_min_{vts}"], dat[f"vts_blue_max_{vts}"])
 
             for f in range(dat["vts_start_frame"], dat["vts_end_frame"]):
                 context.scene.frame_set(f)
-                offset_pixels = [1] * v_count * 4
                 deps = context.evaluated_depsgraph_get()
                 ibm = bmesh.new()
                 ibm.from_object(o, deps)
 
+                uv_layer = ibm.loops.layers.uv.get(dat["vts_uv_map"])
+                if not uv_layer:
+                    print(dat["vts_uv_map"])
+                    return {'CANCELLED'}
                 red_prop.set_layer(ibm.verts)
                 green_prop.set_layer(ibm.verts)
                 blue_prop.set_layer(ibm.verts)
 
-                i = 0
-                for v in ibm.verts:
-                    red = red_prop.get_data(v)
-                    green = green_prop.get_data(v)
-                    blue = blue_prop.get_data(v)
-                    p = i * 4
-                    offset_pixels[p:p+3] = (red, green, blue)
-                    i += 1
-                offsets += offset_pixels
+                for face in ibm.faces:
+                    for v in face.verts:
+                        uv = [0.0, 0.0]
+                        for loop in face.loops:
+                            if loop.vert == v:
+                                uv = loop[uv_layer].uv
+                        red = red_prop.get_data(v)
+                        green = green_prop.get_data(v)
+                        blue = blue_prop.get_data(v)
+                        p = pitch.flat_pixel_from_index(pitch.index_from_pos(uv), f_count, f) * 4
+                        offsets[p:p+3] = (red, green, blue)
+
                 ibm.free()
 
             tex_prop = dat[f"vts_tex_name_{vts}"]
-            im = bpy.data.images.new(f"{o.name}_{tex_prop}", v_count, f_count, float_buffer=True, is_data=True)
+            tex_dims = pitch.get_dims(f_count)
+            im = bpy.data.images.new(f"{o.name}_{tex_prop}", tex_dims[0], tex_dims[1], float_buffer=True, is_data=True)
             im.pixels = offsets
         return {'FINISHED'}
 
